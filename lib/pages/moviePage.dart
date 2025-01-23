@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 import '../main.dart';
 import '../models/genre.dart';
@@ -59,7 +60,6 @@ class _MoviePageState extends State<MoviePage> {
     );
   }
 
-
   void addMovie() {
     Navigator.push(
       context,
@@ -83,18 +83,18 @@ class _MoviePageState extends State<MoviePage> {
         style: TextButton.styleFrom(
           textStyle: Theme.of(context).textTheme.labelLarge,
         ),
-        onPressed: () {Navigator.of(context).pop();},
+        onPressed: () {
+          Navigator.of(context).pop();
+        },
         child: Text("OK"));
     if (filteredMovies.isEmpty) {
-      OpenDialog(context, "Fehler", "Keine Filme vorhanden",[okButton]);
+      OpenDialog(context, "Fehler", "Keine Filme vorhanden", [okButton]);
       return;
     }
     Movie movie = await getRandom(filteredMovies);
     String content =
         'Name: ${movie.name}\n Genre: ${movie.genre.toString().split('.').last}';
-    List<Widget> button = [
-
-    ];
+    List<Widget> button = [];
     OpenDialog(context, movie.name, content, [okButton]);
   }
 
@@ -108,13 +108,18 @@ class _MoviePageState extends State<MoviePage> {
           style: TextButton.styleFrom(
             textStyle: Theme.of(context).textTheme.labelLarge,
           ),
-          onPressed: () async {await changeWatchState(widget.isMainPage, index);Navigator.of(context).pop();},
+          onPressed: () async {
+            await changeWatchState(widget.isMainPage, index);
+            Navigator.of(context).pop();
+          },
           child: Text("Ja")),
       TextButton(
           style: TextButton.styleFrom(
             textStyle: Theme.of(context).textTheme.labelLarge,
           ),
-          onPressed: () {Navigator.of(context).pop();},
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
           child: Text("Nein"))
     ];
     OpenDialog(context, movie.name, content, buttons);
@@ -131,13 +136,15 @@ class _MoviePageState extends State<MoviePage> {
     });
   }
 
-  List<Widget> TopActions(){
+  List<Widget> TopActions() {
     List<Widget> widgets = [];
-    widgets.add(IconButton(
-      icon: Icon(isFilterActive ? Icons.filter_list : Icons.filter_list_off),
-      onPressed: _openFilterPage,
-    ),);
-    if(widget.isMainPage){
+    widgets.add(
+      IconButton(
+        icon: Icon(isFilterActive ? Icons.filter_list : Icons.filter_list_off),
+        onPressed: _openFilterPage,
+      ),
+    );
+    if (widget.isMainPage) {
       widgets.add(IconButton(
         icon: Icon(Icons.shuffle),
         onPressed: () => openRandomDialog(context),
@@ -145,8 +152,9 @@ class _MoviePageState extends State<MoviePage> {
     }
     return widgets;
   }
-  FloatingActionButton? addButton(){
-    if(widget.isMainPage){
+
+  FloatingActionButton? addButton() {
+    if (widget.isMainPage) {
       return FloatingActionButton(
         onPressed: addMovie,
         tooltip: 'Film hinzufügen',
@@ -155,31 +163,46 @@ class _MoviePageState extends State<MoviePage> {
     }
     return null;
   }
+
+  ListTile movieListTile(index) {
+    if (widget.isMainPage) {
+      return ListTile(
+        title: Text(filteredMovies[index].name),
+        subtitle: Text(
+            'Genre: ${filteredMovies[index].genre.toString().split('.').last}'),
+        onTap: () {
+          WatchedDialog(index, context); // Show the popup with movie details
+        },
+      );
+    }
+    return ListTile(
+        title: Text(filteredMovies[index].name),
+        subtitle: Text(
+            'Genre: ${filteredMovies[index].genre.toString().split('.').last}'),
+        trailing: Text(
+            'Gesehen am: ${DateFormat("dd.MM.yyyy").format(filteredMovies[index].watchedDate!)}'),
+        onTap: () {
+          WatchedDialog(index, context); // Show the popup with movie details
+        });
+  }
+
   bool get isFilterActive => selectedGenres.isNotEmpty;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
-        actions: TopActions()
-      ),
+          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+          title: Text(widget.title),
+          actions: TopActions()),
       body: Center(
         child: filteredMovies.isEmpty
             ? Text('Keine Filme mit diesen Kriterien')
             : ListView.builder(
-          itemCount: filteredMovies.length,
-          itemBuilder: (context, index) {
-            return ListTile(
-              title: Text(filteredMovies[index].name),
-              subtitle: Text(
-                  'Genre: ${filteredMovies[index].genre.toString().split('.').last}'),
-              onTap: () {
-                WatchedDialog(index, context); // Show the popup with movie details
-              },
-            );
-          },
-        ),
+                itemCount: filteredMovies.length,
+                itemBuilder: (context, index) {
+                  return movieListTile(index);
+                },
+              ),
       ),
       floatingActionButton: addButton(),
       bottomNavigationBar: BottomNavigationBar(
@@ -190,12 +213,15 @@ class _MoviePageState extends State<MoviePage> {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
-                  builder: (context) => MoviePage(title: MainTitle, selectedIndex: 0)),
+                  builder: (context) =>
+                      MoviePage(title: MainTitle, selectedIndex: 0)),
             );
           } else if (index == 1) {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => MoviePage(title: ArchivTitle, selectedIndex: 1)),
+              MaterialPageRoute(
+                  builder: (context) =>
+                      MoviePage(title: ArchivTitle, selectedIndex: 1)),
             );
           }
         },
