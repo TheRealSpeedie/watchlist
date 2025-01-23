@@ -2,6 +2,8 @@
 
 Textes and stuff currently only Available in **German**
 
+In Planning: Add Categorie Series
+
 ## Description
 The Watchlist App allows users to create, manage, and filter a list of movies. Users can add movies, adjust their genre selections, and change the status of the movies (whether they've watched them or not). The app provides an easy way to manage movies and discover new ones. 
 
