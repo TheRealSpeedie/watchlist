@@ -1,8 +1,5 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:watchlist/pages/archivPage.dart';
-
-import 'main.dart';
 import 'models/genre.dart';
 import 'models/movie.dart';
 

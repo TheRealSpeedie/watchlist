@@ -7,12 +7,14 @@ import '../models/movie.dart';
 import '../services/sharedPreferences.dart';
 import '../utility.dart';
 import 'addPage.dart';
-import 'archivPage.dart';
 import 'filterPage.dart';
 
 class MoviePage extends StatefulWidget {
   String title;
-  MoviePage({super.key, required this.title});
+  int selectedIndex;
+  bool isMainPage;
+  MoviePage({super.key, required this.title, required this.selectedIndex})
+      : isMainPage = selectedIndex == 0;
   @override
   State<MoviePage> createState() => _MoviePageState();
 }
@@ -21,8 +23,14 @@ class _MoviePageState extends State<MoviePage> {
   late List<Movie> movies;
   List<Movie> filteredMovies = [];
   List<Genre> selectedGenres = [];
+  late int _selectedIndex;
 
-  int _selectedIndex = 0;
+  @override
+  void initState() {
+    super.initState();
+    _selectedIndex = widget.selectedIndex;
+    loadData();
+  }
 
   Future<void> loadData() async {
     movies = await getAllItems();
@@ -51,13 +59,7 @@ class _MoviePageState extends State<MoviePage> {
     );
   }
 
-  @override
-  void initState() {
-    super.initState();
-    loadData();
-  }
 
-  // Add movie navigation
   void addMovie() {
     Navigator.push(
       context,
@@ -67,12 +69,11 @@ class _MoviePageState extends State<MoviePage> {
     );
   }
 
-  // Archiv navigation
   void archiv() {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => ArchivScreen(),
+        builder: (context) => MoviePage(title: ArchivTitle, selectedIndex: 1),
       ),
     );
   }
@@ -99,13 +100,15 @@ class _MoviePageState extends State<MoviePage> {
 
   void WatchedDialog(int index, context) {
     Movie movie = filteredMovies[index];
-    String content = 'Hast du den Film gesehen?';
+    String content = widget.isMainPage
+        ? 'Hast du den Film gesehen?'
+        : 'Möchtest du den Film nochmal anschauen?';
     List<Widget> buttons = [
       TextButton(
           style: TextButton.styleFrom(
             textStyle: Theme.of(context).textTheme.labelLarge,
           ),
-          onPressed: () async {await changeWatchState(true, index);Navigator.of(context).pop();},
+          onPressed: () async {await changeWatchState(widget.isMainPage, index);Navigator.of(context).pop();},
           child: Text("Ja")),
       TextButton(
           style: TextButton.styleFrom(
@@ -117,17 +120,40 @@ class _MoviePageState extends State<MoviePage> {
     OpenDialog(context, movie.name, content, buttons);
   }
 
-  // Handle watch state change and remove item from the list
   Future<void> changeWatchState(bool value, int index) async {
     await editWatched(filteredMovies[index], value);
     loadData();
   }
 
-  // Change the selected page for the Bottom Navigation
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
+  }
+
+  List<Widget> TopActions(){
+    List<Widget> widgets = [];
+    widgets.add(IconButton(
+      icon: Icon(isFilterActive ? Icons.filter_list : Icons.filter_list_off),
+      onPressed: _openFilterPage,
+    ),);
+    if(widget.isMainPage){
+      widgets.add(IconButton(
+        icon: Icon(Icons.shuffle),
+        onPressed: () => openRandomDialog(context),
+      ));
+    }
+    return widgets;
+  }
+  FloatingActionButton? addButton(){
+    if(widget.isMainPage){
+      return FloatingActionButton(
+        onPressed: addMovie,
+        tooltip: 'Film hinzufügen',
+        child: const Icon(Icons.add_box_outlined),
+      );
+    }
+    return null;
   }
   bool get isFilterActive => selectedGenres.isNotEmpty;
   @override
@@ -136,17 +162,7 @@ class _MoviePageState extends State<MoviePage> {
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(widget.title),
-        actions: [
-          // Filter Button
-          IconButton(
-            icon: Icon(isFilterActive ? Icons.filter_list : Icons.filter_list_off),
-            onPressed: _openFilterPage,
-          ),
-          IconButton(
-            icon: Icon(Icons.shuffle),
-            onPressed: () => openRandomDialog(context),
-          ),
-        ],
+        actions: TopActions()
       ),
       body: Center(
         child: filteredMovies.isEmpty
@@ -165,11 +181,7 @@ class _MoviePageState extends State<MoviePage> {
           },
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: addMovie,
-        tooltip: 'Film hinzufügen',
-        child: const Icon(Icons.add_box_outlined),
-      ),
+      floatingActionButton: addButton(),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: (index) {
@@ -178,12 +190,12 @@ class _MoviePageState extends State<MoviePage> {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
-                  builder: (context) => MyHomePage()),
+                  builder: (context) => MoviePage(title: MainTitle, selectedIndex: 0)),
             );
           } else if (index == 1) {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => ArchivScreen()),
+              MaterialPageRoute(builder: (context) => MoviePage(title: ArchivTitle, selectedIndex: 1)),
             );
           }
         },
