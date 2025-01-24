@@ -1,0 +1,3 @@
+enum OnPage{
+  MAIN, ARCHIV, INPROGRESS
+}

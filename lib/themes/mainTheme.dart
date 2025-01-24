@@ -1,4 +1,3 @@
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
@@ -13,8 +12,6 @@ const accentFgColor = Color(0xFF070e0b);
 
 const colorScheme = ColorScheme(
   brightness: Brightness.dark,
-  background: backgroundColor,
-  onBackground: textColor,
   primary: primaryColor,
   onPrimary: primaryFgColor,
   secondary: secondaryColor,

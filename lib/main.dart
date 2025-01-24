@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:watchlist/pages/moviePage.dart';
+import 'package:watchlist/models/page.dart';
+import 'package:watchlist/pages/mediaPage.dart';
 import 'package:watchlist/themes/mainTheme.dart';
-import 'package:watchlist/utility.dart';
+import 'package:watchlist/utility/utility.dart';
 
 Future<void> main() async {
   runApp(const MyApp());
@@ -18,7 +19,8 @@ class MyApp extends StatelessWidget {
         colorScheme: colorScheme,
         useMaterial3: true,
       ),
-      home:  MoviePage(title: MainTitle, selectedIndex: 0),
+      debugShowCheckedModeBanner: false,
+      home:  MediaPage(title: MainTitle, selectedIndex: 0, onPage: OnPage.MAIN,),
     );
   }
 }

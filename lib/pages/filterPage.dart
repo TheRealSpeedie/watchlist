@@ -5,7 +5,7 @@ class FilterPage extends StatefulWidget {
   final List<Genre> selectedGenres;
   final Function(List<Genre>) onGenresSelected;
 
-  const FilterPage({required this.selectedGenres, required this.onGenresSelected});
+  const FilterPage({super.key, required this.selectedGenres, required this.onGenresSelected});
 
   @override
   _FilterPageState createState() => _FilterPageState();
@@ -24,7 +24,7 @@ class _FilterPageState extends State<FilterPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Genre Filter'),
+        title: Text('Filter'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -38,9 +38,9 @@ class _FilterPageState extends State<FilterPage> {
             SizedBox(height: 16),
             Expanded(
               child: ListView(
-                children: Genre.values.map((genre) {
+                children: Genre.getSelectableValues().map((genre) {
                   return CheckboxListTile(
-                    title: Text(genre.toString().split('.').last),
+                    title: Text(genre.getCapital()),
                     value: selectedGenres.contains(genre),
                     onChanged: (bool? selected) {
                       setState(() {

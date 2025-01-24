@@ -1,85 +1,120 @@
 import 'dart:convert';
 import 'dart:math';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:watchlist/models/movie.dart';
+import 'package:watchlist/models/media.dart';
 import 'package:watchlist/models/genre.dart';
+import 'package:watchlist/models/MediaCategory.dart';
+import 'package:watchlist/models/serieAddon.dart';
+import 'package:watchlist/models/status.dart';
 
-Future<List<Movie>> _getMovies() async {
+Future<List<Media>> _getMedias() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
-  String? jsonMovies = prefs.getString('movies');
-  if (jsonMovies != null) {
-    List<dynamic> decodedMovies = jsonDecode(jsonMovies);
-    return decodedMovies.map((movie) => Movie.fromJson(movie)).toList();
+  //await prefs.clear();
+  String? jsonMedias = prefs.getString('media');
+  if (jsonMedias != null) {
+    List<dynamic> decodedMovies = jsonDecode(jsonMedias);
+    return decodedMovies.map((media) => Media.fromJson(media)).toList();
   }
   return [];
 }
 
-Future<void> _saveMovies(List<Movie> movies) async {
+Future<void> _saveMedias(List<Media> medias) async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
-  List<Map<String, dynamic>> moviesJson = movies.map((movie) => movie.toJson()).toList();
-  await prefs.setString('movies', jsonEncode(moviesJson));
+  List<Map<String, dynamic>> jsonMedias = medias.map((media) => media.toJson()).toList();
+  await prefs.setString('media', jsonEncode(jsonMedias));
 }
 
-Future<void> saveMovie(Movie movie) async {
-  List<Movie> movies = await getAllItems();
-  movies.add(movie);
-  await _saveMovies(movies);
+Future<void> saveMedia(Media media) async {
+  List<Media> medias = await getAllItems();
+  medias.add(media);
+  await _saveMedias(medias);
 }
 
-Future<void> editWatched(Movie movie, bool watchedStatus) async {
-  List<Movie> movies = await getAllItems();
-  int index = movies.indexWhere((m) => m.id == movie.id);
+Future<void> saveMedias(List<Media> medias) async {
+  await _saveMedias(medias);
+}
+
+Future<void> editWatched(Media media, Status watchedStatus) async {
+  List<Media> medias = await getAllItems();
+  int index = medias.indexWhere((m) => m.id == media.id);
 
   if (index != -1) {
-    movies[index].watched = watchedStatus;
-    if (watchedStatus) {
-      movies[index].watchedDate = DateTime.now();
+    medias[index].watched = watchedStatus;
+    if (watchedStatus == Status.WATCHED) {
+      medias[index].watchedDate = DateTime.now();
     } else {
-      movies[index].watchedDate = null;
+      medias[index].watchedDate = null;
     }
-    await _saveMovies(movies);
+    if(watchedStatus == Status.WATCHING){
+      medias[index].serieAddon.startedWatching = DateTime.now();
+      if(medias[index].serieAddon.currentSequence == 0){
+        medias[index].serieAddon.currentSequence = 1;
+      }
+    }
+    await _saveMedias(medias);
   }
 }
 
-Future<Movie?> getMovieWithHighestId() async {
-  List<Movie> movieList = await getAllItems();
-  Movie? movieWithHighestId = movieList.firstOrNull;
-  int maxId = -1;
+Future<int> getMediaWithHighestID() async {
+  List<Media> mediaList = await getAllItems();
+  int maxId = 0;
 
-  for (var movie in movieList) {
-    int movieId = movie.id;
-    if (movieId > maxId) {
-      maxId = movieId;
-      movieWithHighestId = movie;
+  for (var media in mediaList) {
+    int mediaId = media.id;
+    if (mediaId > maxId) {
+      maxId = mediaId;
     }
   }
-  return movieWithHighestId;
+  return maxId;
 }
 
-Future<List<Movie>> getAllItems() async {
-  return await _getMovies();
+Future<List<Media>> getAllItems() async {
+  return await _getMedias();
+}
+Future<List<Media>> getAllByGenre(Genre genre) async {
+  List<Media> medias = await _getMedias();
+  return medias.where((media) => media.genre == genre).toList();
 }
 
-Future<List<Movie>> getAllWatched() async {
-  List<Movie> movies = await _getMovies();
-  return movies.where((movie) => movie.watched).toList();
-}
-
-Future<List<Movie>> getAllNotWatched() async {
-  List<Movie> movies = await _getMovies();
-  return movies.where((movie) => !movie.watched).toList();
-}
-
-Future<List<Movie>> getAllByGenre(Genre genre) async {
-  List<Movie> movies = await _getMovies();
-  return movies.where((movie) => movie.genre == genre).toList();
-}
-
-Future<Movie> getRandom(List<Movie> movies) async {
-  if (movies.isNotEmpty) {
-    int randomIndex = Random().nextInt(movies.length);
-    return movies[randomIndex];
+Future<Media> getRandom(List<Media> medias) async {
+  if (medias.isNotEmpty) {
+    int randomIndex = Random().nextInt(medias.length);
+    return medias[randomIndex];
   } else {
-    return  Movie(id: 1, name: "", genre: Genre.ACTION, watched: false);
+    var serienaddon = SerieAddon(startedWatching: DateTime.now(), currentSeason: 0, currentSequence: 0, finalSeason: 0, finalSequence: 0);
+    return  Media(id: 1, name: "", genre: Genre.ACTION, watched: Status.NOTWATCHED, category: MediaCategory.MOVIE, serieAddon: serienaddon);
   }
+}
+
+Future<void> ChangeStateOfEpisode(Media media, int currentEpisode) async {
+  List<Media> medias = await getAllItems();
+  int index = medias.indexWhere((m) => m.id == media.id);
+
+  if (index != -1) {
+    medias[index].serieAddon.currentSequence = currentEpisode;
+
+    await _saveMedias(medias);
+  }
+}
+Future<void> ChangeStateOfSeason(Media media, int currentSeason) async {
+  List<Media> medias = await getAllItems();
+  int index = medias.indexWhere((m) => m.id == media.id);
+
+  if (index != -1) {
+    medias[index].serieAddon.currentSeason = currentSeason;
+
+    await _saveMedias(medias);
+  }
+}
+
+Future<bool>isSerieFinish(Media media) async {
+  List<Media> medias = await getAllItems();
+  int index = medias.indexWhere((m) => m.id == media.id);
+
+  if (index != -1) {
+    if(medias[index].serieAddon.currentSeason == media.serieAddon.finalSeason && medias[index].serieAddon.currentSequence == media.serieAddon.finalSequence){
+      return true;
+    }
+  }
+  return false;
 }
