@@ -34,6 +34,14 @@ Future<void> saveMedias(List<Media> medias) async {
   await _saveMedias(medias);
 }
 
+Future<void> UpdateMedia(Media media) async{
+  List<Media> medias = await _getMedias();
+  int index = medias.indexWhere((m) => m.id == media.id);
+  medias.removeAt(index);
+  medias.add(media);
+  saveMedias(medias);
+}
+
 Future<void> editWatched(Media media, Status watchedStatus) async {
   List<Media> medias = await getAllItems();
   int index = medias.indexWhere((m) => m.id == media.id);

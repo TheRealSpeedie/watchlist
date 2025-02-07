@@ -31,6 +31,11 @@ Future<void> changeWatchState(Status status, Media media, PageHandler pageHandle
   pageHandler.loadDataCallback();
 }
 
+Future<void> changeFinalSeasonAndEpisode(Media media, PageHandler pageHandler) async {
+  await UpdateMedia(media);
+  pageHandler.loadDataCallback();
+}
+
 void message(String text, BuildContext context){
   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
     content: Text(text),
